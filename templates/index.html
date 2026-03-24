@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Vision Studio — Face &amp; Object Detection</title>
+  <meta name="description" content="Real-time AI-powered face and object detection dashboard using OpenCV, YOLO and FastAPI."/>
+  <link rel="stylesheet" href="/static/css/style.css?v=10"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════ PARTICLE CANVAS ═══════════════════════════ -->
+<canvas id="bg-canvas" style="
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  opacity:0.35;
+"></canvas>
+
+<!-- ═══════════════════════════ LANDING PAGE ══════════════════════════════ -->
+<div id="landing-page" class="landing-page">
+  <div class="landing-content">
+    <div class="landing-badge">SYSTEM INITIALIZATION V2.0</div>
+    <h1 class="landing-hero">Neural Vision<br/>Intelligence</h1>
+    <p class="landing-sub">Advanced facial topography mapping and object recognition pipeline powered by OpenCV and deep learning inference engines.</p>
+    <button class="btn-primary btn-landing" id="enter-btn">
+      <i class="fa-solid fa-power-off" aria-hidden="true"></i> INITIALIZE SYSTEM
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ DASHBOARD SYSTEM ══════════════════════════ -->
+<div id="dashboard-ui" style="opacity: 0; pointer-events: none; transition: opacity 1s cubic-bezier(0.4,0,0.2,1);">
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════════════ -->
+<aside class="sidebar" role="navigation" aria-label="Main navigation">
+
+  <div class="logo">
+    <div class="logo-icon" aria-hidden="true">
+      <i class="fa-solid fa-eye"></i>
+    </div>
+    <div class="logo-text">
+      <span class="logo-title">AI Vision</span>
+      <span class="logo-sub">Detection Studio</span>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="Sections">
+    <a class="nav-item active" data-tab="upload" href="#" id="nav-upload" aria-current="page">
+      <i class="fa-solid fa-image" aria-hidden="true"></i>
+      <span>Static Inference</span>
+    </a>
+    <a class="nav-item" data-tab="webcam" href="#" id="nav-webcam">
+      <i class="fa-solid fa-video" aria-hidden="true"></i>
+      <span>Real-time Processing</span>
+    </a>
+    <a class="nav-item" data-tab="classes" href="#" id="nav-classes">
+      <i class="fa-solid fa-tags" aria-hidden="true"></i>
+      <span>Recognition Index</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="engine-badge">
+      <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+      <div>
+        <div class="eb-title">OpenCV + YOLO</div>
+        <div class="eb-sub">FastAPI Backend</div>
+      </div>
+      <div class="status-dot" title="Server online"></div>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ═══════════════════════════ MAIN ═════════════════════════════════════ -->
+<main class="main" role="main">
+
+  <!-- ── Top Bar ── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 id="page-title">Neural Visual Analysis</h1>
+      <p id="page-sub">Execute advanced object mapping and facial recognition pipelines</p>
+    </div>
+    <div class="topbar-right">
+      <!-- Theme toggle Dropdown -->
+      <div class="theme-dropdown-wrap" style="position: relative; margin-right: 8px;">
+        <button class="mode-btn btn-theme" id="theme-btn" aria-label="Toggle Color Scheme" title="Select Color Scheme" style="border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          <i class="fa-solid fa-palette"></i> Theme <i class="fa-solid fa-chevron-down" style="font-size:0.7em; margin-left:4px;"></i>
+        </button>
+        <div class="theme-dropdown-menu" id="theme-menu">
+          <button class="theme-opt active" data-theme-val="">Default</button>
+          <button class="theme-opt" data-theme-val="sunset">Sunset</button>
+          <button class="theme-opt" data-theme-val="cyberpunk">Cyberpunk</button>
+          <button class="theme-opt" data-theme-val="emerald">Emerald</button>
+          <button class="theme-opt" data-theme-val="batman">Batman</button>
+          <button class="theme-opt" data-theme-val="witcher">The Witcher</button>
+        </div>
+      </div>
+
+      <!-- Mode toggle -->
+      <div class="mode-toggle" role="group" aria-label="Detection mode">
+        <button class="mode-btn active" data-mode="face" id="mode-face" aria-pressed="true">
+          <i class="fa-solid fa-face-smile" aria-hidden="true"></i> Face
+        </button>
+        <button class="mode-btn" data-mode="object" id="mode-object" aria-pressed="false">
+          <i class="fa-solid fa-cube" aria-hidden="true"></i> Object
+        </button>
+      </div>
+      <!-- Confidence slider (object only) -->
+      <div class="conf-wrap" id="conf-wrap" style="display:none;" aria-label="Confidence threshold">
+        <label for="conf-slider">Conf <span id="conf-val">40%</span></label>
+        <input type="range" id="conf-slider" min="10" max="90" value="40" aria-label="Confidence percentage"/>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════ TAB: UPLOAD ══════════ -->
+  <section id="tab-upload" class="tab active" aria-labelledby="nav-upload">
+
+    <!-- Drop Zone -->
+    <div class="drop-zone card" id="drop-zone" role="button" tabindex="0"
+         aria-label="Upload image — click or drag and drop">
+      <div class="drop-inner">
+        <div class="drop-icon" aria-hidden="true">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <p class="drop-title">Initialize payload: Drop media here</p>
+        <p class="drop-sub">— or manually select —</p>
+        <label class="btn-primary" for="file-input">
+          <i class="fa-solid fa-folder-open" aria-hidden="true"></i> Select Media Payload
+        </label>
+        <input type="file" id="file-input" accept="image/*" hidden aria-label="Choose image file"/>
+        <p class="drop-hint">JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; WEBP &nbsp;·&nbsp; BMP</p>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader-wrap" id="loader" style="display:none;" aria-live="polite" aria-label="Processing image">
+      <div class="loader-ring" aria-hidden="true"></div>
+      <p>Processing deep learning inference…</p>
+      <div class="loader-dots" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Result grid -->
+    <div class="result-grid" id="result-section" style="display:none;">
+
+      <!-- Original -->
+      <div class="card img-card">
+        <div class="card-header">
+          <i class="fa-solid fa-image" aria-hidden="true"></i> Source Image
+        </div>
+        <div class="img-wrap">
+          <img id="original-img" src="" alt="Original uploaded image"/>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="arrow-col" aria-hidden="true">
+        <div class="arrow-circle">
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="card img-card">
+        <div class="card-header">
+          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Inference Result
+        </div>
+        <div class="img-wrap">
+          <img id="result-img" src="" alt="Image with AI detections overlaid"/>
+        </div>
+        <button class="btn-download" id="download-btn" aria-label="Download result image">
+          <i class="fa-solid fa-download" aria-hidden="true"></i> Export Results
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-section" style="display:none;">
+      <div class="stat-box">
+        <div class="stat-icon" aria-hidden="true"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="stat-value" id="stat-count">0</div>
+        <div class="stat-label" id="stat-label">Entities Recognized</div>
+      </div>
+      <div class="stat-box det-box">
+        <div class="card-header">
+          <i class="fa-solid fa-list-ul" aria-hidden="true"></i> Inference Breakdown
+        </div>
+        <div class="det-list" id="detection-list" aria-live="polite"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════ TAB: WEBCAM ══════════ -->
+  <section id="tab-webcam" class="tab" aria-labelledby="nav-webcam">
+    <div class="webcam-layout">
+
+      <div class="card webcam-card">
+        <div class="card-header">
+          <i class="fa-solid fa-circle-dot" aria-hidden="true"></i> Live Neural Stream
+          <span class="live-pill" id="live-pill" style="display:none;" aria-live="polite">
+            <span class="live-dot" aria-hidden="true"></span> LIVE
+          </span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="webcam-canvas" aria-label="Webcam detection feed"></canvas>
+          <video id="webcam-video" autoplay playsinline style="display:none;" aria-hidden="true"></video>
+          <div class="cam-placeholder" id="cam-placeholder" aria-hidden="true">
+            <i class="fa-solid fa-camera"></i>
+            <p>Awaiting camera stream initialization...</p>
+          </div>
+        </div>
+        <div class="webcam-controls">
+          <button class="btn-primary" id="start-btn" aria-label="Start webcam detection">
+            <i class="fa-solid fa-play" aria-hidden="true"></i> Initialize Stream
+          </button>
+          <button class="btn-danger" id="stop-btn" style="display:none;" aria-label="Stop webcam detection">
+            <i class="fa-solid fa-stop" aria-hidden="true"></i> Terminate
+          </button>
+        </div>
+      </div>
+
+      <div class="card live-stats-card">
+        <div class="card-header">
+          <i class="fa-solid fa-chart-line" aria-hidden="true"></i> Continuous Telemetry
+        </div>
+        <div class="stat-box small">
+          <div class="stat-icon" aria-hidden="true"><i class="fa-solid fa-bullseye"></i></div>
+          <div class="stat-value" id="live-count">0</div>
+          <div class="stat-label">Entities</div>
+        </div>
+        <div class="det-list" id="live-det-list" aria-live="polite"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════ TAB: CLASSES ══════════ -->
+  <section id="tab-classes" class="tab" aria-labelledby="nav-classes">
+    <div class="card">
+      <div class="card-header">
+        <i class="fa-solid fa-tags" aria-hidden="true"></i> Active Neural Classes
+        <span class="class-count-badge" id="class-count-badge" aria-live="polite">—</span>
+      </div>
+      <div class="class-search-wrap">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input type="text" id="class-search" placeholder="Query model vocabulary…" aria-label="Search detection classes"/>
+      </div>
+      <div class="class-grid" id="class-grid" aria-label="Detection classes">
+        <p class="muted">Retrieving class schema metadata…</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+</div> <!-- End Dashboard UI -->
+
+<!-- ═══════════════════════════ KILL SWITCH ═══════════════════════════════ -->
+<a href="/classic" class="kill-switch" id="kill-switch" title="Emergency Revert to Classic UI">
+  <i class="fa-solid fa-triangle-exclamation"></i> Revert UI
+</a>
+
+<script src="/static/js/app.js?v=10"></script>
+</body>
+</html>
