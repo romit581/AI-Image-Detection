@@ -5,7 +5,11 @@
 // ── Theme State ───────────────────────────────────────────────────────────────
 let themeCache = { r1: 79, g1: 142, b1: 247, r2: 61, g2: 217, b2: 164 };
 let currentThemeIndex = 0;
-const themes = ["", "sunset", "cyberpunk", "emerald"];
+const themes = ["", "sunset", "cyberpunk", "emerald", "batman", "witcher"];
+
+let lastFrameTime = 0;
+let frameCount    = 0;
+let currentFPS    = 0;
 
 function updateThemeCache() {
   const rs = getComputedStyle(document.documentElement);

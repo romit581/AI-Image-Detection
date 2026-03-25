@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import base64
 import os
+import time
 import urllib.request
 from pathlib import Path
 
@@ -80,21 +81,26 @@ class DetectionEngine:
                confidence_threshold: float = 0.4) -> dict:
         """
         Run detection on a BGR image.
-        mode: 'face' | 'object'
-        Returns: { image, count, detections, mode }
+        Returns: { image, count, detections, mode, time_ms }
         """
+        start = time.perf_counter()
+        
         if mode == "face":
-            return self._detect_faces(image)
+            res = self._detect_faces(image)
         elif mode == "object":
             if self.object_net is None:
-                return {
+                res = {
                     "image": image, "count": 0, "detections": [],
                     "mode": "object",
                     "error": "YOLOv3 weights not found. See server logs."
                 }
-            return self._detect_objects(image, confidence_threshold)
+            else:
+                res = self._detect_objects(image, confidence_threshold)
         else:
             raise ValueError(f"Unknown mode: {mode}")
+
+        res["time_ms"] = round((time.perf_counter() - start) * 1000, 2)
+        return res
 
     # ── Face Detection ────────────────────────────────────────────────────────
 
