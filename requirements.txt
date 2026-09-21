@@ -1,6 +1,6 @@
 fastapi[standard]
 uvicorn[standard]
-opencv-contrib-python-headless
+opencv-contrib-python-headless==4.12.0.88
 numpy
 python-multipart
 jinja2
